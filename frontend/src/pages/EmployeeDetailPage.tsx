@@ -8,10 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useEmployee } from "@/hooks/useEmployee"
-
-function formatSalary(amount: number, currency: string): string {
-  return `${currency} ${amount.toLocaleString("en-US")}`
-}
+import { formatSalary } from "@/lib/format"
 
 export function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>()

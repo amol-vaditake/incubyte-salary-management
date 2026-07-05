@@ -17,16 +17,13 @@ import {
 } from "@/components/ui/pagination"
 import { FilterSelect, ALL_VALUE } from "@/components/FilterSelect"
 import { useEmployees } from "@/hooks/useEmployees"
+import { formatSalary } from "@/lib/format"
 import type { EmployeeFilters } from "@/types/employee"
 
 const COUNTRIES = ["India", "USA", "UK", "Germany", "Canada"]
 const DEPARTMENTS = ["Engineering", "Sales", "HR", "Finance", "Operations", "Marketing"]
 const STATUSES = ["active", "inactive"]
 const PAGE_SIZE = 20
-
-function formatSalary(amount: number, currency: string): string {
-  return `${currency} ${amount.toLocaleString("en-US")}`
-}
 
 export function EmployeesPage() {
   const navigate = useNavigate()
