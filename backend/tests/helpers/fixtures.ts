@@ -46,3 +46,35 @@ export async function insertEmployee(
 
   return id;
 }
+
+export interface SalaryHistoryFixture {
+  id?: string;
+  employeeId: string;
+  salaryAmount: number;
+  currency?: string;
+  effectiveDate: string;
+  reason: string;
+}
+
+export async function insertSalaryHistory(
+  pool: Pool,
+  fixture: SalaryHistoryFixture
+): Promise<string> {
+  const id = fixture.id ?? crypto.randomUUID();
+
+  await pool.query(
+    `INSERT INTO salary_history
+      (id, employee_id, salary_amount, currency, effective_date, reason)
+     VALUES ($1,$2,$3,$4,$5,$6)`,
+    [
+      id,
+      fixture.employeeId,
+      fixture.salaryAmount,
+      fixture.currency ?? "INR",
+      fixture.effectiveDate,
+      fixture.reason,
+    ]
+  );
+
+  return id;
+}
