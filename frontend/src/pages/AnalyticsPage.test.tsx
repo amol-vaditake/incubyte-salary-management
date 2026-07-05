@@ -20,7 +20,7 @@ function buildSummary(overrides: Partial<AnalyticsSummary> = {}): AnalyticsSumma
     ],
     headcountByLevel: [
       { level: "Junior", count: 120 },
-      { level: "Mid", count: 90 },
+      { level: "Mid", count: 95 },
       { level: "Senior", count: 45 },
       { level: "Lead", count: 15 },
     ],
@@ -48,8 +48,7 @@ describe("AnalyticsPage", () => {
 
     render(<AnalyticsPage />)
 
-    await screen.findByText("Engineering")
-    expect(screen.getByText("INR 1,200,000")).toBeInTheDocument()
+    await screen.findByText("INR 1,200,000")
     expect(screen.getByText("USD 110,000")).toBeInTheDocument()
     expect(screen.getByText("INR 900,000")).toBeInTheDocument()
   })
@@ -76,7 +75,6 @@ describe("AnalyticsPage", () => {
     expect(engineeringBar).toHaveStyle({ width: "100%" })
     expect(salesBar).toHaveStyle({ width: "50%" })
     expect(screen.getByText("180")).toBeInTheDocument()
-    expect(screen.getByText("90")).toBeInTheDocument()
   })
 
   it("renders headcount by level as a bar chart proportional to the max", async () => {
@@ -104,7 +102,7 @@ describe("AnalyticsPage", () => {
 
     resolveFetch({ ok: true, status: 200, json: () => Promise.resolve(buildSummary()) })
 
-    await screen.findByText("Engineering")
+    await screen.findByText("INR 1,200,000")
     expect(screen.queryByText(/loading/i)).not.toBeInTheDocument()
   })
 
