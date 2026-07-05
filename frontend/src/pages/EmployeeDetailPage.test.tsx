@@ -132,4 +132,21 @@ describe("EmployeeDetailPage", () => {
 
     expect(await screen.findByText(/employee not found/i)).toBeInTheDocument()
   })
+
+  it("shows the Update Salary trigger for an active employee", async () => {
+    mockFetchOnce(buildEmployeeDetail({ status: "active" }))
+
+    renderDetailPage()
+
+    expect(await screen.findByRole("button", { name: /update salary/i })).toBeInTheDocument()
+  })
+
+  it("hides the Update Salary trigger for an inactive employee", async () => {
+    mockFetchOnce(buildEmployeeDetail({ status: "inactive" }))
+
+    renderDetailPage()
+
+    await screen.findByText("Asha Rao")
+    expect(screen.queryByRole("button", { name: /update salary/i })).not.toBeInTheDocument()
+  })
 })

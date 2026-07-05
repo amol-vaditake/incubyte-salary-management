@@ -9,10 +9,11 @@ import {
 } from "@/components/ui/table"
 import { useEmployee } from "@/hooks/useEmployee"
 import { formatSalary } from "@/lib/format"
+import { UpdateSalaryDialog } from "@/components/UpdateSalaryDialog"
 
 export function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { data, isLoading, error, notFound } = useEmployee(id ?? "")
+  const { data, isLoading, error, notFound, refetch } = useEmployee(id ?? "")
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-4 p-8">
@@ -22,11 +23,20 @@ export function EmployeeDetailPage() {
 
       {!isLoading && !error && !notFound && data && (
         <>
-          <div>
-            <h1 className="text-2xl font-semibold">
-              {data.firstName} {data.lastName}
-            </h1>
-            <p className="text-muted-foreground">{data.employeeCode}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold">
+                {data.firstName} {data.lastName}
+              </h1>
+              <p className="text-muted-foreground">{data.employeeCode}</p>
+            </div>
+            {data.status === "active" && (
+              <UpdateSalaryDialog
+                employeeId={data.id}
+                currentCurrency={data.currency}
+                onUpdated={() => refetch()}
+              />
+            )}
           </div>
 
           <dl className="grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-3">
