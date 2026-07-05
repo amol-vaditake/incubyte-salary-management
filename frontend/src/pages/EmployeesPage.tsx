@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   Table,
   TableBody,
@@ -28,6 +29,7 @@ function formatSalary(amount: number, currency: string): string {
 }
 
 export function EmployeesPage() {
+  const navigate = useNavigate()
   const [filters, setFilters] = useState<EmployeeFilters>({})
   const [page, setPage] = useState(1)
 
@@ -94,7 +96,15 @@ export function EmployeesPage() {
             </TableHeader>
             <TableBody>
               {data.data.map((employee) => (
-                <TableRow key={employee.id}>
+                <TableRow
+                  key={employee.id}
+                  tabIndex={0}
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/employees/${employee.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") navigate(`/employees/${employee.id}`)
+                  }}
+                >
                   <TableCell>{employee.employeeCode}</TableCell>
                   <TableCell>
                     {employee.firstName} {employee.lastName}
