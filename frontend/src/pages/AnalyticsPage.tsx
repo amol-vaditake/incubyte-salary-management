@@ -1,14 +1,6 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { BarChart } from "@/components/BarChart"
+import { SalaryByCurrencyTable } from "@/components/SalaryByCurrencyTable"
 import { useAnalyticsSummary } from "@/hooks/useAnalyticsSummary"
-import { formatSalary } from "@/lib/format"
 
 export function AnalyticsPage() {
   const { data, isLoading, error } = useAnalyticsSummary()
@@ -22,53 +14,27 @@ export function AnalyticsPage() {
 
       {!isLoading && !error && data && (
         <>
-          <section className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Average Salary by Department</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Currency</TableHead>
-                  <TableHead>Average Salary</TableHead>
-                  <TableHead>Headcount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.averageSalaryByDepartment.map((row) => (
-                  <TableRow key={`${row.department}-${row.currency}`}>
-                    <TableCell>{row.department}</TableCell>
-                    <TableCell>{row.currency}</TableCell>
-                    <TableCell>{formatSalary(row.averageSalary, row.currency)}</TableCell>
-                    <TableCell>{row.count}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </section>
+          <SalaryByCurrencyTable
+            title="Average Salary by Department"
+            labelHeading="Department"
+            rows={data.averageSalaryByDepartment.map((row) => ({
+              label: row.department,
+              currency: row.currency,
+              averageSalary: row.averageSalary,
+              count: row.count,
+            }))}
+          />
 
-          <section className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Average Salary by Country</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Currency</TableHead>
-                  <TableHead>Average Salary</TableHead>
-                  <TableHead>Headcount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.averageSalaryByCountry.map((row) => (
-                  <TableRow key={`${row.country}-${row.currency}`}>
-                    <TableCell>{row.country}</TableCell>
-                    <TableCell>{row.currency}</TableCell>
-                    <TableCell>{formatSalary(row.averageSalary, row.currency)}</TableCell>
-                    <TableCell>{row.count}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </section>
+          <SalaryByCurrencyTable
+            title="Average Salary by Country"
+            labelHeading="Country"
+            rows={data.averageSalaryByCountry.map((row) => ({
+              label: row.country,
+              currency: row.currency,
+              averageSalary: row.averageSalary,
+              count: row.count,
+            }))}
+          />
 
           <section className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold">Headcount by Department</h2>
