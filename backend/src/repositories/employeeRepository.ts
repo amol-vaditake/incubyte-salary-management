@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type { Pool } from "pg";
 import type { Employee } from "../types/employee";
 import { toDateOnlyString } from "../db/dateOnly";
@@ -99,6 +100,77 @@ export async function findEmployeeById(
 
   const row = result.rows[0];
   return row ? mapRow(row) : null;
+}
+
+export async function findEmployeeByEmail(
+  pool: Pool,
+  email: string
+): Promise<Employee | null> {
+  const result = await pool.query<EmployeeRow>(
+    "SELECT * FROM employees WHERE email = $1",
+    [email]
+  );
+
+  const row = result.rows[0];
+  return row ? mapRow(row) : null;
+}
+
+// Codes are zero-padded (EMP-00001, EMP-00002, ...) so a plain string sort
+// matches numeric order. Reads the current max under the same transaction
+// as the insert that follows, to narrow (not eliminate) the race window -
+// acceptable given the single-HR-Manager persona this system is built for.
+export async function nextEmployeeCode(db: Queryable): Promise<string> {
+  const result = await db.query<{ employee_code: string }>(
+    "SELECT employee_code FROM employees ORDER BY employee_code DESC LIMIT 1"
+  );
+
+  const last = result.rows[0]?.employee_code;
+  const lastNumber = last ? Number(last.replace(/^EMP-/, "")) : 0;
+  return `EMP-${String(lastNumber + 1).padStart(5, "0")}`;
+}
+
+export interface NewEmployeeInput {
+  employeeCode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  country: string;
+  department: string;
+  roleTitle: string;
+  level: string;
+  currency: string;
+  salaryAmount: number;
+  hireDate: string;
+}
+
+export async function createEmployee(
+  db: Queryable,
+  input: NewEmployeeInput
+): Promise<Employee> {
+  const id = crypto.randomUUID();
+
+  const result = await db.query<EmployeeRow>(
+    `INSERT INTO employees
+      (id, employee_code, first_name, last_name, email, country, department, role_title, level, currency, salary_amount, hire_date, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'active')
+     RETURNING *`,
+    [
+      id,
+      input.employeeCode,
+      input.firstName,
+      input.lastName,
+      input.email,
+      input.country,
+      input.department,
+      input.roleTitle,
+      input.level,
+      input.currency,
+      input.salaryAmount,
+      input.hireDate,
+    ]
+  );
+
+  return mapRow(result.rows[0]!);
 }
 
 export async function updateEmployeeSalary(

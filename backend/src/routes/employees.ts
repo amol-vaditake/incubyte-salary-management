@@ -1,8 +1,11 @@
 import { Router } from "express";
 import type { Pool } from "pg";
 import {
+  createEmployee,
+  findEmployeeByEmail,
   findEmployeeById,
   findEmployees,
+  nextEmployeeCode,
   updateEmployeeSalary,
 } from "../repositories/employeeRepository";
 import {
@@ -56,6 +59,86 @@ function parseSalaryUpdateBody(
   };
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface CreateEmployeeInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  country: string;
+  department: string;
+  roleTitle: string;
+  level: string;
+  currency: string;
+  salaryAmount: number;
+  hireDate: string;
+}
+
+function requiredString(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function parseCreateEmployeeBody(
+  body: unknown
+): CreateEmployeeInput | { error: string } {
+  if (typeof body !== "object" || body === null) {
+    return { error: "request body is required" };
+  }
+
+  const {
+    firstName,
+    lastName,
+    email,
+    country,
+    department,
+    roleTitle,
+    level,
+    currency,
+    salaryAmount,
+    hireDate,
+  } = body as Record<string, unknown>;
+
+  const fields: Record<string, string | null> = {
+    firstName: requiredString(firstName),
+    lastName: requiredString(lastName),
+    country: requiredString(country),
+    department: requiredString(department),
+    roleTitle: requiredString(roleTitle),
+    level: requiredString(level),
+    currency: requiredString(currency),
+  };
+  for (const [name, value] of Object.entries(fields)) {
+    if (value === null) return { error: `${name} is required` };
+  }
+
+  if (typeof email !== "string" || !EMAIL_PATTERN.test(email)) {
+    return { error: "email must be a valid email address" };
+  }
+  if (
+    typeof salaryAmount !== "number" ||
+    !Number.isFinite(salaryAmount) ||
+    salaryAmount <= 0
+  ) {
+    return { error: "salaryAmount must be a positive number" };
+  }
+  if (typeof hireDate !== "string" || !DATE_PATTERN.test(hireDate)) {
+    return { error: "hireDate must be a valid date in YYYY-MM-DD format" };
+  }
+
+  return {
+    firstName: fields.firstName!,
+    lastName: fields.lastName!,
+    email,
+    country: fields.country!,
+    department: fields.department!,
+    roleTitle: fields.roleTitle!,
+    level: fields.level!,
+    currency: fields.currency!,
+    salaryAmount,
+    hireDate,
+  };
+}
+
 function parsePositiveInt(value: unknown, fallback: number): number | null {
   if (value === undefined) return fallback;
   if (typeof value !== "string") return null;
@@ -71,6 +154,39 @@ function parseStringFilter(value: unknown): string | undefined {
 
 export function createEmployeesRouter(pool: Pool): Router {
   const router = Router();
+
+  router.post("/", async (req, res, next) => {
+    try {
+      const input = parseCreateEmployeeBody(req.body);
+      if ("error" in input) {
+        res.status(400).json({ error: input.error });
+        return;
+      }
+
+      const existing = await findEmployeeByEmail(pool, input.email);
+      if (existing) {
+        res.status(409).json({ error: "An employee with this email already exists" });
+        return;
+      }
+
+      const { employee, historyEntry } = await withTransaction(pool, async (client) => {
+        const employeeCode = await nextEmployeeCode(client);
+        const created = await createEmployee(client, { ...input, employeeCode });
+        const entry = await createSalaryHistoryEntry(client, {
+          employeeId: created.id,
+          salaryAmount: input.salaryAmount,
+          currency: input.currency,
+          effectiveDate: input.hireDate,
+          reason: "Initial hire",
+        });
+        return { employee: created, historyEntry: entry };
+      });
+
+      res.status(201).json({ ...employee, salaryHistory: [historyEntry] });
+    } catch (err) {
+      next(err);
+    }
+  });
 
   router.get("/", async (req, res, next) => {
     try {
