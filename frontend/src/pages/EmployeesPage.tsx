@@ -16,6 +16,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { FilterSelect, ALL_VALUE } from "@/components/FilterSelect"
+import { CreateEmployeeDialog } from "@/components/CreateEmployeeDialog"
 import { useEmployees } from "@/hooks/useEmployees"
 import { formatSalary } from "@/lib/format"
 import type { EmployeeFilters } from "@/types/employee"
@@ -30,7 +31,7 @@ export function EmployeesPage() {
   const [filters, setFilters] = useState<EmployeeFilters>({})
   const [page, setPage] = useState(1)
 
-  const { data, isLoading, error } = useEmployees(filters, page, PAGE_SIZE)
+  const { data, isLoading, error, refetch } = useEmployees(filters, page, PAGE_SIZE)
 
   function updateFilter(key: keyof EmployeeFilters, value: string | null) {
     setFilters((prev) => ({
@@ -42,7 +43,10 @@ export function EmployeesPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-8">
-      <h1 className="text-2xl font-semibold">Employees</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Employees</h1>
+        <CreateEmployeeDialog onCreated={() => refetch()} />
+      </div>
 
       <div className="flex flex-wrap gap-3">
         <FilterSelect
