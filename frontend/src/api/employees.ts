@@ -1,5 +1,11 @@
-import { apiGet } from "./client"
-import type { EmployeeDetail, EmployeeFilters, PaginatedEmployees } from "@/types/employee"
+import { apiGet, apiPatch, apiPost } from "./client"
+import type {
+  CreateEmployeeInput,
+  EmployeeDetail,
+  EmployeeFilters,
+  PaginatedEmployees,
+  UpdateSalaryInput,
+} from "@/types/employee"
 
 export interface FetchEmployeesParams extends EmployeeFilters {
   page: number
@@ -19,4 +25,15 @@ export function fetchEmployees(params: FetchEmployeesParams): Promise<PaginatedE
 
 export function fetchEmployeeById(id: string): Promise<EmployeeDetail> {
   return apiGet<EmployeeDetail>(`/employees/${id}`)
+}
+
+export function createEmployee(input: CreateEmployeeInput): Promise<EmployeeDetail> {
+  return apiPost<EmployeeDetail>("/employees", input)
+}
+
+export function updateEmployeeSalary(
+  id: string,
+  input: UpdateSalaryInput
+): Promise<EmployeeDetail> {
+  return apiPatch<EmployeeDetail>(`/employees/${id}/salary`, input)
 }

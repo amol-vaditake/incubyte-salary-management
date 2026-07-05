@@ -6,6 +6,7 @@ interface UseEmployeesResult {
   data: PaginatedEmployees | null
   isLoading: boolean
   error: string | null
+  refetch: () => void
 }
 
 export function useEmployees(
@@ -16,6 +17,7 @@ export function useEmployees(
   const [data, setData] = useState<PaginatedEmployees | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refetchToken, setRefetchToken] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -38,7 +40,7 @@ export function useEmployees(
     return () => {
       cancelled = true
     }
-  }, [filters.country, filters.department, filters.status, page, pageSize])
+  }, [filters.country, filters.department, filters.status, page, pageSize, refetchToken])
 
-  return { data, isLoading, error }
+  return { data, isLoading, error, refetch: () => setRefetchToken((t) => t + 1) }
 }

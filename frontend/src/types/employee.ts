@@ -47,3 +47,23 @@ export interface SalaryHistoryEntry {
 export interface EmployeeDetail extends Employee {
   salaryHistory: SalaryHistoryEntry[]
 }
+
+export interface CreateEmployeeInput {
+  firstName: string
+  lastName: string
+  email: string
+  country: string
+  department: string
+  roleTitle: string
+  level: string
+  currency: string
+  salaryAmount: number
+  hireDate: string
+}
+
+export interface UpdateSalaryInput {
+  salaryAmount: number
+  currency?: string
+  effectiveDate: string
+  reason: string
+}

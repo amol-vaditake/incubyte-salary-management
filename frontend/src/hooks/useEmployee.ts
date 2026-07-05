@@ -8,6 +8,7 @@ interface UseEmployeeResult {
   isLoading: boolean
   error: string | null
   notFound: boolean
+  refetch: () => void
 }
 
 export function useEmployee(id: string): UseEmployeeResult {
@@ -15,6 +16,7 @@ export function useEmployee(id: string): UseEmployeeResult {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notFound, setNotFound] = useState(false)
+  const [refetchToken, setRefetchToken] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -42,7 +44,7 @@ export function useEmployee(id: string): UseEmployeeResult {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, refetchToken])
 
-  return { data, isLoading, error, notFound }
+  return { data, isLoading, error, notFound, refetch: () => setRefetchToken((t) => t + 1) }
 }
