@@ -1,9 +1,12 @@
 import { Router } from "express";
 import type { Pool } from "pg";
-import { findEmployees } from "../repositories/employeeRepository";
+import { findEmployeeById, findEmployees } from "../repositories/employeeRepository";
+import { findSalaryHistoryByEmployeeId } from "../repositories/salaryHistoryRepository";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function parsePositiveInt(value: unknown, fallback: number): number | null {
   if (value === undefined) return fallback;
@@ -49,6 +52,28 @@ export function createEmployeesRouter(pool: Pool): Router {
 
       const result = await findEmployees(pool, filters, { page, pageSize });
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.get("/:id", async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      if (!id || !UUID_PATTERN.test(id)) {
+        res.status(400).json({ error: "id must be a valid UUID" });
+        return;
+      }
+
+      const employee = await findEmployeeById(pool, id);
+      if (!employee) {
+        res.status(404).json({ error: "Employee not found" });
+        return;
+      }
+
+      const salaryHistory = await findSalaryHistoryByEmployeeId(pool, id);
+      res.json({ ...employee, salaryHistory });
     } catch (err) {
       next(err);
     }

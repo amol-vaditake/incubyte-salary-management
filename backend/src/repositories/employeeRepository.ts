@@ -1,5 +1,6 @@
 import type { Pool } from "pg";
 import type { Employee } from "../types/employee";
+import { toDateOnlyString } from "../db/dateOnly";
 
 export interface EmployeeFilters {
   country?: string | undefined;
@@ -34,7 +35,7 @@ interface EmployeeRow {
   level: string;
   currency: string;
   salary_amount: string;
-  hire_date: string;
+  hire_date: string | Date;
   status: string;
   created_at: string;
   updated_at: string;
@@ -53,7 +54,7 @@ function mapRow(row: EmployeeRow): Employee {
     level: row.level,
     currency: row.currency,
     salaryAmount: Number(row.salary_amount),
-    hireDate: row.hire_date,
+    hireDate: toDateOnlyString(row.hire_date),
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -84,6 +85,19 @@ function buildWhereClause(filters: EmployeeFilters): {
     clause: conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "",
     values,
   };
+}
+
+export async function findEmployeeById(
+  pool: Pool,
+  id: string
+): Promise<Employee | null> {
+  const result = await pool.query<EmployeeRow>(
+    "SELECT * FROM employees WHERE id = $1",
+    [id]
+  );
+
+  const row = result.rows[0];
+  return row ? mapRow(row) : null;
 }
 
 export async function findEmployees(
