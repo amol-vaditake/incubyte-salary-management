@@ -8,19 +8,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { FilterSelect, ALL_VALUE } from "@/components/FilterSelect"
 import { useEmployees } from "@/hooks/useEmployees"
 import type { EmployeeFilters } from "@/types/employee"
 
@@ -28,7 +22,6 @@ const COUNTRIES = ["India", "USA", "UK", "Germany", "Canada"]
 const DEPARTMENTS = ["Engineering", "Sales", "HR", "Finance", "Operations", "Marketing"]
 const STATUSES = ["active", "inactive"]
 const PAGE_SIZE = 20
-const ALL_VALUE = "all"
 
 function formatSalary(amount: number, currency: string): string {
   return `${currency} ${amount.toLocaleString("en-US")}`
@@ -53,50 +46,30 @@ export function EmployeesPage() {
       <h1 className="text-2xl font-semibold">Employees</h1>
 
       <div className="flex flex-wrap gap-3">
-        <Select value={filters.country ?? ALL_VALUE} onValueChange={(v) => updateFilter("country", v)}>
-          <SelectTrigger aria-label="Country" className="w-40">
-            <SelectValue placeholder="Country" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_VALUE}>All countries</SelectItem>
-            {COUNTRIES.map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filters.department ?? ALL_VALUE}
-          onValueChange={(v) => updateFilter("department", v)}
-        >
-          <SelectTrigger aria-label="Department" className="w-44">
-            <SelectValue placeholder="Department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_VALUE}>All departments</SelectItem>
-            {DEPARTMENTS.map((department) => (
-              <SelectItem key={department} value={department}>
-                {department}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={filters.status ?? ALL_VALUE} onValueChange={(v) => updateFilter("status", v)}>
-          <SelectTrigger aria-label="Status" className="w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_VALUE}>All statuses</SelectItem>
-            {STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          label="Country"
+          value={filters.country}
+          options={COUNTRIES}
+          allLabel="All countries"
+          onChange={(v) => updateFilter("country", v)}
+          className="w-40"
+        />
+        <FilterSelect
+          label="Department"
+          value={filters.department}
+          options={DEPARTMENTS}
+          allLabel="All departments"
+          onChange={(v) => updateFilter("department", v)}
+          className="w-44"
+        />
+        <FilterSelect
+          label="Status"
+          value={filters.status}
+          options={STATUSES}
+          allLabel="All statuses"
+          onChange={(v) => updateFilter("status", v)}
+          className="w-36"
+        />
       </div>
 
       {isLoading && <p className="text-muted-foreground">Loading employees...</p>}
