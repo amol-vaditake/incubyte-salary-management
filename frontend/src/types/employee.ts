@@ -33,3 +33,17 @@ export interface EmployeeFilters {
   department?: string
   status?: string
 }
+
+export interface SalaryHistoryEntry {
+  id: string
+  employeeId: string
+  salaryAmount: number
+  currency: string
+  effectiveDate: string
+  reason: string
+  createdAt: string
+}
+
+export interface EmployeeDetail extends Employee {
+  salaryHistory: SalaryHistoryEntry[]
+}

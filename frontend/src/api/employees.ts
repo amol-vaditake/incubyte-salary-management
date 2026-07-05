@@ -1,5 +1,5 @@
 import { apiGet } from "./client"
-import type { EmployeeFilters, PaginatedEmployees } from "@/types/employee"
+import type { EmployeeDetail, EmployeeFilters, PaginatedEmployees } from "@/types/employee"
 
 export interface FetchEmployeesParams extends EmployeeFilters {
   page: number
@@ -15,4 +15,8 @@ export function fetchEmployees(params: FetchEmployeesParams): Promise<PaginatedE
   if (params.status) query.set("status", params.status)
 
   return apiGet<PaginatedEmployees>(`/employees?${query.toString()}`)
+}
+
+export function fetchEmployeeById(id: string): Promise<EmployeeDetail> {
+  return apiGet<EmployeeDetail>(`/employees/${id}`)
 }

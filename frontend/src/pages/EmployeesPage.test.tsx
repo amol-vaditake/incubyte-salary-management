@@ -1,8 +1,21 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
+import type { ReactElement } from "react"
 import { EmployeesPage } from "./EmployeesPage"
 import type { PaginatedEmployees, Employee } from "@/types/employee"
+
+function renderWithRouter(ui: ReactElement) {
+  return render(
+    <MemoryRouter initialEntries={["/"]}>
+      <Routes>
+        <Route path="/" element={ui} />
+        <Route path="/employees/:id" element={<div>Employee Detail Page</div>} />
+      </Routes>
+    </MemoryRouter>
+  )
+}
 
 function buildEmployee(overrides: Partial<Employee> = {}): Employee {
   return {
@@ -82,7 +95,7 @@ describe("EmployeesPage", () => {
       })
     )
 
-    render(<EmployeesPage />)
+    renderWithRouter(<EmployeesPage />)
 
     expect(await screen.findByText("EMP-00001")).toBeInTheDocument()
     expect(screen.getByText("Asha Rao")).toBeInTheDocument()
@@ -100,7 +113,7 @@ describe("EmployeesPage", () => {
       vi.fn().mockReturnValueOnce(pending)
     )
 
-    render(<EmployeesPage />)
+    renderWithRouter(<EmployeesPage />)
 
     expect(screen.getByText(/loading/i)).toBeInTheDocument()
 
@@ -124,7 +137,7 @@ describe("EmployeesPage", () => {
       })
     )
 
-    render(<EmployeesPage />)
+    renderWithRouter(<EmployeesPage />)
 
     expect(await screen.findByText(/failed to load employees/i)).toBeInTheDocument()
   })
@@ -133,7 +146,7 @@ describe("EmployeesPage", () => {
     const user = userEvent.setup()
     const fetchMock = mockFetchResponses(buildResponse(), buildResponse())
 
-    render(<EmployeesPage />)
+    renderWithRouter(<EmployeesPage />)
     await screen.findByText("EMP-00001")
 
     await user.click(screen.getByRole("combobox", { name: /country/i }))
@@ -152,7 +165,7 @@ describe("EmployeesPage", () => {
       buildResponse({ pagination: { page: 2, pageSize: 20, total: 40, totalPages: 2 } })
     )
 
-    render(<EmployeesPage />)
+    renderWithRouter(<EmployeesPage />)
     await screen.findByText("EMP-00001")
 
     await user.click(screen.getByRole("button", { name: /go to next page/i }))
@@ -160,5 +173,19 @@ describe("EmployeesPage", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     const secondCallUrl = fetchMock.mock.calls[1]![0] as string
     expect(secondCallUrl).toContain("page=2")
+  })
+
+  it("clicking an employee row navigates to /employees/:id", async () => {
+    const user = userEvent.setup()
+    mockFetchResponses(
+      buildResponse({ data: [buildEmployee({ id: "abc-123", employeeCode: "EMP-00001" })] })
+    )
+
+    renderWithRouter(<EmployeesPage />)
+    await screen.findByText("EMP-00001")
+
+    await user.click(screen.getByText("EMP-00001"))
+
+    expect(await screen.findByText("Employee Detail Page")).toBeInTheDocument()
   })
 })
