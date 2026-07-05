@@ -155,7 +155,7 @@ describe("EmployeesPage", () => {
     render(<EmployeesPage />)
     await screen.findByText("EMP-00001")
 
-    await user.click(screen.getByRole("link", { name: /go to next page/i }))
+    await user.click(screen.getByRole("button", { name: /go to next page/i }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
     const secondCallUrl = fetchMock.mock.calls[1]![0] as string

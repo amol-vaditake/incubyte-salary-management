@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom"
-import { DashboardPage } from "@/pages/DashboardPage"
+import { EmployeesPage } from "@/pages/EmployeesPage"
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <DashboardPage />,
+    element: <EmployeesPage />,
   },
 ])
