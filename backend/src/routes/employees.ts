@@ -1,12 +1,59 @@
 import { Router } from "express";
 import type { Pool } from "pg";
-import { findEmployeeById, findEmployees } from "../repositories/employeeRepository";
-import { findSalaryHistoryByEmployeeId } from "../repositories/salaryHistoryRepository";
+import {
+  findEmployeeById,
+  findEmployees,
+  updateEmployeeSalary,
+} from "../repositories/employeeRepository";
+import {
+  createSalaryHistoryEntry,
+  findSalaryHistoryByEmployeeId,
+} from "../repositories/salaryHistoryRepository";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+interface SalaryUpdateInput {
+  salaryAmount: number;
+  currency: string;
+  effectiveDate: string;
+  reason: string;
+}
+
+function parseSalaryUpdateBody(
+  body: unknown,
+  currentCurrency: string
+): SalaryUpdateInput | { error: string } {
+  if (typeof body !== "object" || body === null) {
+    return { error: "request body is required" };
+  }
+
+  const { salaryAmount, currency, effectiveDate, reason } =
+    body as Record<string, unknown>;
+
+  if (typeof salaryAmount !== "number" || !Number.isFinite(salaryAmount) || salaryAmount <= 0) {
+    return { error: "salaryAmount must be a positive number" };
+  }
+  if (currency !== undefined && (typeof currency !== "string" || currency.length === 0)) {
+    return { error: "currency must be a non-empty string" };
+  }
+  if (typeof effectiveDate !== "string" || !DATE_PATTERN.test(effectiveDate)) {
+    return { error: "effectiveDate must be a valid date in YYYY-MM-DD format" };
+  }
+  if (typeof reason !== "string" || reason.trim().length === 0) {
+    return { error: "reason is required" };
+  }
+
+  return {
+    salaryAmount,
+    currency: typeof currency === "string" ? currency : currentCurrency,
+    effectiveDate,
+    reason,
+  };
+}
 
 function parsePositiveInt(value: unknown, fallback: number): number | null {
   if (value === undefined) return fallback;
@@ -74,6 +121,63 @@ export function createEmployeesRouter(pool: Pool): Router {
 
       const salaryHistory = await findSalaryHistoryByEmployeeId(pool, id);
       res.json({ ...employee, salaryHistory });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.patch("/:id/salary", async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      if (!id || !UUID_PATTERN.test(id)) {
+        res.status(400).json({ error: "id must be a valid UUID" });
+        return;
+      }
+
+      const employee = await findEmployeeById(pool, id);
+      if (!employee) {
+        res.status(404).json({ error: "Employee not found" });
+        return;
+      }
+      if (employee.status !== "active") {
+        res
+          .status(400)
+          .json({ error: "Cannot update salary for an inactive employee" });
+        return;
+      }
+
+      const input = parseSalaryUpdateBody(req.body, employee.currency);
+      if ("error" in input) {
+        res.status(400).json({ error: input.error });
+        return;
+      }
+
+      const existingHistory = await findSalaryHistoryByEmployeeId(pool, id);
+      const latestEntry = existingHistory[existingHistory.length - 1];
+      if (latestEntry && input.effectiveDate < latestEntry.effectiveDate) {
+        res.status(400).json({
+          error: "effectiveDate cannot be before the most recent salary_history entry",
+        });
+        return;
+      }
+
+      const updatedEmployee = await updateEmployeeSalary(pool, id, {
+        salaryAmount: input.salaryAmount,
+        currency: input.currency,
+      });
+      const newEntry = await createSalaryHistoryEntry(pool, {
+        employeeId: id,
+        salaryAmount: input.salaryAmount,
+        currency: input.currency,
+        effectiveDate: input.effectiveDate,
+        reason: input.reason,
+      });
+
+      res.json({
+        ...updatedEmployee,
+        salaryHistory: [...existingHistory, newEntry],
+      });
     } catch (err) {
       next(err);
     }

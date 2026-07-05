@@ -100,6 +100,22 @@ export async function findEmployeeById(
   return row ? mapRow(row) : null;
 }
 
+export async function updateEmployeeSalary(
+  pool: Pool,
+  id: string,
+  update: { salaryAmount: number; currency: string }
+): Promise<Employee> {
+  const result = await pool.query<EmployeeRow>(
+    `UPDATE employees
+     SET salary_amount = $1, currency = $2, updated_at = now()
+     WHERE id = $3
+     RETURNING *`,
+    [update.salaryAmount, update.currency, id]
+  );
+
+  return mapRow(result.rows[0]!);
+}
+
 export async function findEmployees(
   pool: Pool,
   filters: EmployeeFilters,

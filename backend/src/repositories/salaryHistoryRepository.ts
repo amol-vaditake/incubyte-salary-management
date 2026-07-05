@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type { Pool } from "pg";
 import { toDateOnlyString } from "../db/dateOnly";
 
@@ -31,6 +32,35 @@ function mapRow(row: SalaryHistoryRow): SalaryHistoryRecord {
     reason: row.reason,
     createdAt: row.created_at,
   };
+}
+
+export interface NewSalaryHistoryEntry {
+  employeeId: string;
+  salaryAmount: number;
+  currency: string;
+  effectiveDate: string;
+  reason: string;
+}
+
+export async function createSalaryHistoryEntry(
+  pool: Pool,
+  entry: NewSalaryHistoryEntry
+): Promise<SalaryHistoryRecord> {
+  const result = await pool.query<SalaryHistoryRow>(
+    `INSERT INTO salary_history (id, employee_id, salary_amount, currency, effective_date, reason)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING *`,
+    [
+      crypto.randomUUID(),
+      entry.employeeId,
+      entry.salaryAmount,
+      entry.currency,
+      entry.effectiveDate,
+      entry.reason,
+    ]
+  );
+
+  return mapRow(result.rows[0]!);
 }
 
 export async function findSalaryHistoryByEmployeeId(
