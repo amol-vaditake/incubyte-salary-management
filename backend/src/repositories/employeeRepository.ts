@@ -1,6 +1,7 @@
 import type { Pool } from "pg";
 import type { Employee } from "../types/employee";
 import { toDateOnlyString } from "../db/dateOnly";
+import type { Queryable } from "../db/transaction";
 
 export interface EmployeeFilters {
   country?: string | undefined;
@@ -101,11 +102,11 @@ export async function findEmployeeById(
 }
 
 export async function updateEmployeeSalary(
-  pool: Pool,
+  db: Queryable,
   id: string,
   update: { salaryAmount: number; currency: string }
 ): Promise<Employee> {
-  const result = await pool.query<EmployeeRow>(
+  const result = await db.query<EmployeeRow>(
     `UPDATE employees
      SET salary_amount = $1, currency = $2, updated_at = now()
      WHERE id = $3

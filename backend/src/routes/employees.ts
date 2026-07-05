@@ -9,6 +9,7 @@ import {
   createSalaryHistoryEntry,
   findSalaryHistoryByEmployeeId,
 } from "../repositories/salaryHistoryRepository";
+import { withTransaction } from "../db/transaction";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -162,16 +163,19 @@ export function createEmployeesRouter(pool: Pool): Router {
         return;
       }
 
-      const updatedEmployee = await updateEmployeeSalary(pool, id, {
-        salaryAmount: input.salaryAmount,
-        currency: input.currency,
-      });
-      const newEntry = await createSalaryHistoryEntry(pool, {
-        employeeId: id,
-        salaryAmount: input.salaryAmount,
-        currency: input.currency,
-        effectiveDate: input.effectiveDate,
-        reason: input.reason,
+      const { updatedEmployee, newEntry } = await withTransaction(pool, async (client) => {
+        const updated = await updateEmployeeSalary(client, id, {
+          salaryAmount: input.salaryAmount,
+          currency: input.currency,
+        });
+        const entry = await createSalaryHistoryEntry(client, {
+          employeeId: id,
+          salaryAmount: input.salaryAmount,
+          currency: input.currency,
+          effectiveDate: input.effectiveDate,
+          reason: input.reason,
+        });
+        return { updatedEmployee: updated, newEntry: entry };
       });
 
       res.json({

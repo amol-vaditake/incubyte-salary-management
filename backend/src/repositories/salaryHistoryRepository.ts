@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import type { Pool } from "pg";
 import { toDateOnlyString } from "../db/dateOnly";
+import type { Queryable } from "../db/transaction";
 
 export interface SalaryHistoryRecord {
   id: string;
@@ -43,10 +44,10 @@ export interface NewSalaryHistoryEntry {
 }
 
 export async function createSalaryHistoryEntry(
-  pool: Pool,
+  db: Queryable,
   entry: NewSalaryHistoryEntry
 ): Promise<SalaryHistoryRecord> {
-  const result = await pool.query<SalaryHistoryRow>(
+  const result = await db.query<SalaryHistoryRow>(
     `INSERT INTO salary_history (id, employee_id, salary_amount, currency, effective_date, reason)
      VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
