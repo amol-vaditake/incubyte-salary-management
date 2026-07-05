@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Pool } from "pg";
 
 export function createPool(): Pool {
@@ -5,5 +6,8 @@ export function createPool(): Pool {
   if (!connectionString) {
     throw new Error("DATABASE_URL environment variable is required");
   }
-  return new Pool({ connectionString });
+  return new Pool({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+  });
 }

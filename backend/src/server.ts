@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { createApp } from "./app";
 import { createPool } from "./db/pool";
 import { applySchema } from "./db/schema";
