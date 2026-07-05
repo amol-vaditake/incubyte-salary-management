@@ -35,3 +35,15 @@ This log documents AI-assisted decisions, prompts, and manual (non-AI) steps tak
 ## From this point forward
 
 Entries below this line are generated during active Claude Code sessions, per the standing instruction in `CLAUDE.md` Section 5: every non-trivial decision, prompt, or trade-off encountered during development is logged here as it happens, not reconstructed afterward.
+
+### 6. Test runner setup and DB testing strategy (AI-assisted)
+**Prompt/instruction given:** "Start the TDD loop for the backend per CLAUDE.md. First slice: create the Postgres schema (employees + salary_history), then GET /employees with pagination and filtering. Write a failing test first, minimal implementation, refactor, commit each stage separately."
+**Decision/output:**
+- Switched `tsconfig.json` `module`/`moduleResolution` from the scaffolded `nodenext` to `commonjs`/`node`. `ts-jest` supports both, but `commonjs` avoids ESM-specific test-runner friction (extension mapping, `extensionsToTreatAsEsm`) for no real cost in a Node backend that isn't publishing an ESM package. Also filled in `types: ["node", "jest"]` (was empty, which would have left `process`/`describe`/`it` untyped) and dropped `rootDir`/`outDir` until an actual build script needs them.
+- Checked this dev machine for a local Postgres/Docker to back integration tests: neither `psql` nor `docker` is installed. Rather than requiring the reviewer/grader to have Postgres running locally to run `npm test` (risky for a graded assessment), added **pg-mem** (`^3.0.14`) as a devDependency — an in-memory, dependency-free engine that speaks the same wire protocol/interface as `pg`. Tests get a real `Pool` and run real SQL (schema DDL, inserts, `WHERE`/`LIMIT`/`OFFSET`) against it, so this is a genuine integration test of the SQL, not a mock of the repository layer.
+- Verified the ts-jest + pg-mem setup with a throwaway smoke test before writing real tests, then deleted it — confirms tooling works before it's load-bearing.
+**Alternatives considered:**
+- *Mock the repository/DB layer entirely* — rejected: would only test that the route calls a mocked function, not that the SQL pagination/filtering logic is correct, which is the actual behavior worth testing here.
+- *Require a real local/Dockerized Postgres for tests* — rejected: most "production-realistic" option, but makes `npm test` fail out of the box on a machine without Postgres/Docker installed (this one included), which is a bad default for something explicitly graded on "fast, deterministic, easy to run" tests.
+- *Use SQLite for tests, Postgres in production* — rejected: schema/dialect drift risk (e.g. date/numeric handling, aggregate functions used later for analytics) could hide real bugs; pg-mem stays on the Postgres dialect.
+**Logged in:** `backend/tsconfig.json`, `backend/jest.config.js`, `backend/package.json` (commit `chore: configure Jest test runner for backend`).
