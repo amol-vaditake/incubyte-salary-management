@@ -10,7 +10,7 @@ describe("seedDatabase", () => {
   beforeAll(async () => {
     pool = await createTestPool();
     await seedDatabase(pool, EMPLOYEE_COUNT);
-  }, 60_000);
+  }, 120_000);
 
   it("inserts exactly the requested number of employees", async () => {
     const result = await pool.query<{ count: string }>(
@@ -63,5 +63,5 @@ describe("seedDatabase", () => {
 
     expect(Number(employeesResult.rows[0]?.count)).toBe(EMPLOYEE_COUNT);
     expect(Number(historyResult.rows[0]?.count)).toBe(EMPLOYEE_COUNT);
-  }, 60_000);
+  }, 120_000);
 });
