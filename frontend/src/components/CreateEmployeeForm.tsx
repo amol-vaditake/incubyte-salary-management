@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { FormField } from "@/components/FormField"
 import { createEmployee } from "@/api/employees"
 import { ApiError } from "@/api/client"
 import type { CreateEmployeeInput, EmployeeDetail } from "@/types/employee"
@@ -120,44 +120,33 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
       {submitError && <p className="text-destructive text-sm">{submitError}</p>}
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="firstName">First Name</Label>
+        <FormField label="First Name" htmlFor="firstName" error={fieldErrors.firstName}>
           <Input
             id="firstName"
             value={form.firstName}
             onChange={(e) => updateField("firstName", e.target.value)}
           />
-          {fieldErrors.firstName && (
-            <p className="text-destructive text-sm">{fieldErrors.firstName}</p>
-          )}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="lastName">Last Name</Label>
+        </FormField>
+        <FormField label="Last Name" htmlFor="lastName" error={fieldErrors.lastName}>
           <Input
             id="lastName"
             value={form.lastName}
             onChange={(e) => updateField("lastName", e.target.value)}
           />
-          {fieldErrors.lastName && (
-            <p className="text-destructive text-sm">{fieldErrors.lastName}</p>
-          )}
-        </div>
+        </FormField>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
+      <FormField label="Email" htmlFor="email" error={fieldErrors.email}>
         <Input
           id="email"
           type="email"
           value={form.email}
           onChange={(e) => updateField("email", e.target.value)}
         />
-        {fieldErrors.email && <p className="text-destructive text-sm">{fieldErrors.email}</p>}
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label>Country</Label>
+        <FormField label="Country" error={fieldErrors.country}>
           <Select value={form.country} onValueChange={(v) => updateField("country", v ?? "")}>
             <SelectTrigger aria-label="Country">
               <SelectValue placeholder="Select country" />
@@ -170,12 +159,8 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               ))}
             </SelectContent>
           </Select>
-          {fieldErrors.country && (
-            <p className="text-destructive text-sm">{fieldErrors.country}</p>
-          )}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label>Department</Label>
+        </FormField>
+        <FormField label="Department" error={fieldErrors.department}>
           <Select
             value={form.department}
             onValueChange={(v) => updateField("department", v ?? "")}
@@ -191,27 +176,19 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               ))}
             </SelectContent>
           </Select>
-          {fieldErrors.department && (
-            <p className="text-destructive text-sm">{fieldErrors.department}</p>
-          )}
-        </div>
+        </FormField>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="roleTitle">Role Title</Label>
+      <FormField label="Role Title" htmlFor="roleTitle" error={fieldErrors.roleTitle}>
         <Input
           id="roleTitle"
           value={form.roleTitle}
           onChange={(e) => updateField("roleTitle", e.target.value)}
         />
-        {fieldErrors.roleTitle && (
-          <p className="text-destructive text-sm">{fieldErrors.roleTitle}</p>
-        )}
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label>Level</Label>
+        <FormField label="Level" error={fieldErrors.level}>
           <Select value={form.level} onValueChange={(v) => updateField("level", v ?? "")}>
             <SelectTrigger aria-label="Level">
               <SelectValue placeholder="Select level" />
@@ -224,10 +201,8 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               ))}
             </SelectContent>
           </Select>
-          {fieldErrors.level && <p className="text-destructive text-sm">{fieldErrors.level}</p>}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label>Currency</Label>
+        </FormField>
+        <FormField label="Currency" error={fieldErrors.currency}>
           <Select value={form.currency} onValueChange={(v) => updateField("currency", v ?? "")}>
             <SelectTrigger aria-label="Currency">
               <SelectValue placeholder="Select currency" />
@@ -240,37 +215,26 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               ))}
             </SelectContent>
           </Select>
-          {fieldErrors.currency && (
-            <p className="text-destructive text-sm">{fieldErrors.currency}</p>
-          )}
-        </div>
+        </FormField>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="salaryAmount">Salary Amount</Label>
+        <FormField label="Salary Amount" htmlFor="salaryAmount" error={fieldErrors.salaryAmount}>
           <Input
             id="salaryAmount"
             type="number"
             value={form.salaryAmount}
             onChange={(e) => updateField("salaryAmount", e.target.value)}
           />
-          {fieldErrors.salaryAmount && (
-            <p className="text-destructive text-sm">{fieldErrors.salaryAmount}</p>
-          )}
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="hireDate">Hire Date</Label>
+        </FormField>
+        <FormField label="Hire Date" htmlFor="hireDate" error={fieldErrors.hireDate}>
           <Input
             id="hireDate"
             type="date"
             value={form.hireDate}
             onChange={(e) => updateField("hireDate", e.target.value)}
           />
-          {fieldErrors.hireDate && (
-            <p className="text-destructive text-sm">{fieldErrors.hireDate}</p>
-          )}
-        </div>
+        </FormField>
       </div>
 
       <Button type="submit" disabled={isSubmitting}>
