@@ -6,7 +6,7 @@ export function AnalyticsPage() {
   const { data, isLoading, error } = useAnalyticsSummary()
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-8">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 p-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <p className="text-muted-foreground text-sm">
@@ -18,7 +18,7 @@ export function AnalyticsPage() {
       {error && <p className="text-destructive">Failed to load analytics: {error}</p>}
 
       {!isLoading && !error && data && (
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="flex flex-col gap-6">
           <SalaryByCurrencyTable
             title="Average Salary by Department"
             labelHeading="Department"
@@ -41,22 +41,24 @@ export function AnalyticsPage() {
             }))}
           />
 
-          <section className="flex flex-col gap-3 rounded-lg border bg-card p-5">
-            <h2 className="text-lg font-semibold tracking-tight">Headcount by Department</h2>
-            <BarChart
-              data={data.headcountByDepartment.map((row) => ({
-                label: row.department,
-                value: row.count,
-              }))}
-            />
-          </section>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <section className="flex flex-col gap-3 rounded-lg border bg-card p-5">
+              <h2 className="text-lg font-semibold tracking-tight">Headcount by Department</h2>
+              <BarChart
+                data={data.headcountByDepartment.map((row) => ({
+                  label: row.department,
+                  value: row.count,
+                }))}
+              />
+            </section>
 
-          <section className="flex flex-col gap-3 rounded-lg border bg-card p-5">
-            <h2 className="text-lg font-semibold tracking-tight">Headcount by Level</h2>
-            <BarChart
-              data={data.headcountByLevel.map((row) => ({ label: row.level, value: row.count }))}
-            />
-          </section>
+            <section className="flex flex-col gap-3 rounded-lg border bg-card p-5">
+              <h2 className="text-lg font-semibold tracking-tight">Headcount by Level</h2>
+              <BarChart
+                data={data.headcountByLevel.map((row) => ({ label: row.level, value: row.count }))}
+              />
+            </section>
+          </div>
         </div>
       )}
     </div>
