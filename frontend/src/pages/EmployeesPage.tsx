@@ -18,16 +18,16 @@ import {
 import { FilterSelect, ALL_VALUE } from "@/components/FilterSelect"
 import { CreateEmployeeDialog } from "@/components/CreateEmployeeDialog"
 import { useEmployees } from "@/hooks/useEmployees"
+import { useEmployeeOptions } from "@/hooks/useEmployeeOptions"
 import { formatSalary } from "@/lib/format"
 import type { EmployeeFilters } from "@/types/employee"
 
-const COUNTRIES = ["India", "USA", "UK", "Germany", "Canada"]
-const DEPARTMENTS = ["Engineering", "Sales", "HR", "Finance", "Operations", "Marketing"]
 const STATUSES = ["active", "inactive"]
 const PAGE_SIZE = 20
 
 export function EmployeesPage() {
   const navigate = useNavigate()
+  const { options } = useEmployeeOptions()
   const [filters, setFilters] = useState<EmployeeFilters>({})
   const [page, setPage] = useState(1)
 
@@ -52,7 +52,7 @@ export function EmployeesPage() {
         <FilterSelect
           label="Country"
           value={filters.country}
-          options={COUNTRIES}
+          options={options.countries}
           allLabel="All countries"
           onChange={(v) => updateFilter("country", v)}
           className="w-40"
@@ -60,7 +60,7 @@ export function EmployeesPage() {
         <FilterSelect
           label="Department"
           value={filters.department}
-          options={DEPARTMENTS}
+          options={options.departments}
           allLabel="All departments"
           onChange={(v) => updateFilter("department", v)}
           className="w-44"
