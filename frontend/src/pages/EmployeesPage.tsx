@@ -77,13 +77,18 @@ export function EmployeesPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 p-8">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Employees</h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Employees</h1>
+          <p className="text-muted-foreground text-sm">
+            Browse, search, and manage salary records across the org.
+          </p>
+        </div>
         <CreateEmployeeDialog onCreated={() => refetch()} />
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4">
         <Input
           aria-label="Search"
           placeholder="Search by name or email"
@@ -124,46 +129,50 @@ export function EmployeesPage() {
 
       {!isLoading && !error && data && (
         <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Salary</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.data.map((employee) => (
-                <TableRow
-                  key={employee.id}
-                  tabIndex={0}
-                  className="cursor-pointer"
-                  onClick={() => navigate(`/employees/${employee.id}`)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") navigate(`/employees/${employee.id}`)
-                  }}
-                >
-                  <TableCell>{employee.employeeCode}</TableCell>
-                  <TableCell>
-                    {employee.firstName} {employee.lastName}
-                  </TableCell>
-                  <TableCell>{employee.country}</TableCell>
-                  <TableCell>{employee.department}</TableCell>
-                  <TableCell>{employee.roleTitle}</TableCell>
-                  <TableCell>{employee.level}</TableCell>
-                  <TableCell>{formatSalary(employee.salaryAmount, employee.currency)}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={employee.status} />
-                  </TableCell>
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Employee Code</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead>Salary</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {data.data.map((employee) => (
+                  <TableRow
+                    key={employee.id}
+                    tabIndex={0}
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/employees/${employee.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") navigate(`/employees/${employee.id}`)
+                    }}
+                  >
+                    <TableCell className="font-medium text-muted-foreground">
+                      {employee.employeeCode}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {employee.firstName} {employee.lastName}
+                    </TableCell>
+                    <TableCell>{employee.country}</TableCell>
+                    <TableCell>{employee.department}</TableCell>
+                    <TableCell>{employee.roleTitle}</TableCell>
+                    <TableCell>{employee.level}</TableCell>
+                    <TableCell>{formatSalary(employee.salaryAmount, employee.currency)}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={employee.status} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
           <div className="flex items-center justify-between">
             <p className="text-muted-foreground text-sm">
