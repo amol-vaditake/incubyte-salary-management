@@ -3,6 +3,13 @@ import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { CreateEmployeeForm } from "./CreateEmployeeForm"
 import type { EmployeeDetail } from "@/types/employee"
+import type { EmployeeOptions } from "@/types/options"
+
+const DEFAULT_OPTIONS: EmployeeOptions = {
+  countries: ["India", "USA", "UK", "Germany", "Canada"],
+  departments: ["Engineering", "Sales", "HR", "Finance", "Operations", "Marketing"],
+  levels: ["Junior", "Mid", "Senior", "Lead"],
+}
 
 function buildCreatedEmployee(): EmployeeDetail {
   return {
@@ -23,6 +30,40 @@ function buildCreatedEmployee(): EmployeeDetail {
     updatedAt: "2026-07-01T00:00:00.000Z",
     salaryHistory: [],
   }
+}
+
+interface MockFetchConfig {
+  options?: EmployeeOptions
+  postResponse?: { ok: boolean; status: number; body: unknown }
+}
+
+// URL/method-aware fetch mock: the form now fetches GET /employees/options
+// on mount (from the real, database-backed endpoint) in addition to the
+// POST /employees on submit, so a simple ordered mockResolvedValueOnce
+// chain no longer reflects what actually happens.
+function mockFetch({ options = DEFAULT_OPTIONS, postResponse }: MockFetchConfig = {}) {
+  const fetchMock = vi.fn((url: string, init?: { method?: string }) => {
+    if (init?.method === "POST") {
+      return Promise.resolve({
+        ok: postResponse?.ok ?? true,
+        status: postResponse?.status ?? 201,
+        json: () => Promise.resolve(postResponse?.body ?? buildCreatedEmployee()),
+      })
+    }
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(options),
+    })
+  })
+  vi.stubGlobal("fetch", fetchMock)
+  return fetchMock
+}
+
+function findPostCall(fetchMock: ReturnType<typeof vi.fn>) {
+  return fetchMock.mock.calls.find(
+    ([, init]: [string, { method?: string }]) => init?.method === "POST"
+  )!
 }
 
 async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
@@ -47,10 +88,39 @@ afterEach(() => {
 })
 
 describe("CreateEmployeeForm", () => {
+  it("sources department/country/level options from GET /employees/options, not a hardcoded list", async () => {
+    const user = userEvent.setup()
+    // Deliberately different from the array that used to be hardcoded in
+    // this component: includes a department that array never had ("Legal")
+    // and omits one it always had ("Marketing"). If this component ever
+    // reverts to a hardcoded list independent of the fetched data, this
+    // test fails - which is exactly the bug class being fixed here.
+    mockFetch({
+      options: {
+        countries: ["Freedonia"],
+        departments: ["Legal"],
+        levels: ["Staff"],
+      },
+    })
+
+    render(<CreateEmployeeForm onSuccess={vi.fn()} />)
+
+    await user.click(screen.getByRole("combobox", { name: /country/i }))
+    expect(await screen.findByRole("option", { name: "Freedonia" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+
+    await user.click(screen.getByRole("combobox", { name: /department/i }))
+    expect(await screen.findByRole("option", { name: "Legal" })).toBeInTheDocument()
+    expect(screen.queryByRole("option", { name: "Marketing" })).not.toBeInTheDocument()
+    await user.keyboard("{Escape}")
+
+    await user.click(screen.getByRole("combobox", { name: /level/i }))
+    expect(await screen.findByRole("option", { name: "Staff" })).toBeInTheDocument()
+  })
+
   it("shows validation errors and does not submit when required fields are empty", async () => {
     const user = userEvent.setup()
-    const fetchMock = vi.fn()
-    vi.stubGlobal("fetch", fetchMock)
+    const fetchMock = mockFetch()
     const onSuccess = vi.fn()
 
     render(<CreateEmployeeForm onSuccess={onSuccess} />)
@@ -58,13 +128,13 @@ describe("CreateEmployeeForm", () => {
     await user.click(screen.getByRole("button", { name: /create employee/i }))
 
     expect(await screen.findByText(/first name is required/i)).toBeInTheDocument()
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false)
     expect(onSuccess).not.toHaveBeenCalled()
   })
 
   it("shows a validation error for an invalid email", async () => {
     const user = userEvent.setup()
-    vi.stubGlobal("fetch", vi.fn())
+    mockFetch()
 
     render(<CreateEmployeeForm onSuccess={vi.fn()} />)
 
@@ -78,12 +148,7 @@ describe("CreateEmployeeForm", () => {
   it("submits successfully and calls onSuccess with the created employee", async () => {
     const user = userEvent.setup()
     const created = buildCreatedEmployee()
-    const fetchMock = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      status: 201,
-      json: () => Promise.resolve(created),
-    })
-    vi.stubGlobal("fetch", fetchMock)
+    const fetchMock = mockFetch({ postResponse: { ok: true, status: 201, body: created } })
     const onSuccess = vi.fn()
 
     render(<CreateEmployeeForm onSuccess={onSuccess} />)
@@ -92,7 +157,7 @@ describe("CreateEmployeeForm", () => {
 
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(created))
 
-    const [url, init] = fetchMock.mock.calls[0]!
+    const [url, init] = findPostCall(fetchMock)
     expect(url).toContain("/employees")
     expect(init.method).toBe("POST")
     const body = JSON.parse(init.body)
@@ -112,14 +177,13 @@ describe("CreateEmployeeForm", () => {
 
   it("shows the backend's error message on a 409 duplicate-email response", async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValueOnce({
+    mockFetch({
+      postResponse: {
         ok: false,
         status: 409,
-        json: () => Promise.resolve({ error: "An employee with this email already exists" }),
-      })
-    )
+        body: { error: "An employee with this email already exists" },
+      },
+    })
     const onSuccess = vi.fn()
 
     render(<CreateEmployeeForm onSuccess={onSuccess} />)
@@ -134,14 +198,13 @@ describe("CreateEmployeeForm", () => {
 
   it("shows the backend's error message on a 400 response", async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValueOnce({
+    mockFetch({
+      postResponse: {
         ok: false,
         status: 400,
-        json: () => Promise.resolve({ error: "salaryAmount must be a positive number" }),
-      })
-    )
+        body: { error: "salaryAmount must be a positive number" },
+      },
+    })
 
     render(<CreateEmployeeForm onSuccess={vi.fn()} />)
     await fillValidForm(user)
