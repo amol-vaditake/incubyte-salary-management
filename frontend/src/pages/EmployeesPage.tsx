@@ -1,5 +1,4 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import {
   Table,
   TableBody,
@@ -28,17 +27,33 @@ const PAGE_SIZE = 20
 export function EmployeesPage() {
   const navigate = useNavigate()
   const { options } = useEmployeeOptions()
-  const [filters, setFilters] = useState<EmployeeFilters>({})
-  const [page, setPage] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // The URL is the single source of truth for filters/page/search, so a
+  // refresh or a shared/bookmarked link restores the exact same view.
+  const filters: EmployeeFilters = {
+    country: searchParams.get("country") ?? undefined,
+    department: searchParams.get("department") ?? undefined,
+    status: searchParams.get("status") ?? undefined,
+    search: searchParams.get("search") ?? undefined,
+  }
+  const parsedPage = Number(searchParams.get("page"))
+  const page = Number.isInteger(parsedPage) && parsedPage >= 1 ? parsedPage : 1
 
   const { data, isLoading, error, refetch } = useEmployees(filters, page, PAGE_SIZE)
 
   function updateFilter(key: keyof EmployeeFilters, value: string | null) {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: !value || value === ALL_VALUE ? undefined : value,
-    }))
-    setPage(1)
+    const next = new URLSearchParams(searchParams)
+    if (!value || value === ALL_VALUE) next.delete(key)
+    else next.set(key, value)
+    next.set("page", "1")
+    setSearchParams(next, { replace: true })
+  }
+
+  function setPage(newPage: number) {
+    const next = new URLSearchParams(searchParams)
+    next.set("page", String(newPage))
+    setSearchParams(next, { replace: true })
   }
 
   return (

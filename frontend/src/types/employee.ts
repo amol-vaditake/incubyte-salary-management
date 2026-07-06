@@ -32,6 +32,7 @@ export interface EmployeeFilters {
   country?: string
   department?: string
   status?: string
+  search?: string
 }
 
 export interface SalaryHistoryEntry {

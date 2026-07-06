@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { MemoryRouter, Route, Routes } from "react-router-dom"
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom"
 import type { ReactElement } from "react"
 import { EmployeesPage } from "./EmployeesPage"
 import type { PaginatedEmployees, Employee } from "@/types/employee"
@@ -13,11 +13,16 @@ const DEFAULT_OPTIONS: EmployeeOptions = {
   levels: ["Junior", "Mid", "Senior", "Lead"],
 }
 
-function renderWithRouter(ui: ReactElement) {
+function LocationDisplay() {
+  const location = useLocation()
+  return <div data-testid="location-search">{location.search}</div>
+}
+
+function renderWithRouter(ui: ReactElement, initialPath = "/") {
   return render(
-    <MemoryRouter initialEntries={["/"]}>
+    <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
-        <Route path="/" element={ui} />
+        <Route path="/" element={<>{ui}<LocationDisplay /></>} />
         <Route path="/employees/:id" element={<div>Employee Detail Page</div>} />
       </Routes>
     </MemoryRouter>
@@ -240,5 +245,37 @@ describe("EmployeesPage", () => {
     await user.click(screen.getByText("EMP-00001"))
 
     expect(await screen.findByText("Employee Detail Page")).toBeInTheDocument()
+  })
+
+  it("loading the page with ?page=3&country=India in the URL renders that state correctly", async () => {
+    const fetchMock = mockFetch({
+      listResponder: () =>
+        okJson(buildResponse({ pagination: { page: 3, pageSize: 20, total: 100, totalPages: 5 } })),
+    })
+
+    renderWithRouter(<EmployeesPage />, "/?page=3&country=India")
+    await screen.findByText("EMP-00001")
+
+    const requestedUrl = listCalls(fetchMock)[0]![0] as string
+    expect(requestedUrl).toContain("page=3")
+    expect(requestedUrl).toContain("country=India")
+    expect(screen.getByRole("combobox", { name: /country/i })).toHaveTextContent("India")
+    expect(screen.getByText(/page 3 of 5/i)).toBeInTheDocument()
+  })
+
+  it("selecting a filter updates the URL, so refreshing preserves it", async () => {
+    const user = userEvent.setup()
+    mockFetch({ listResponder: () => okJson(buildResponse()) })
+
+    renderWithRouter(<EmployeesPage />)
+    await screen.findByText("EMP-00001")
+
+    await user.click(screen.getByRole("combobox", { name: /country/i }))
+    await user.click(await screen.findByRole("option", { name: "India" }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location-search").textContent).toContain("country=India")
+    )
+    expect(screen.getByTestId("location-search").textContent).toContain("page=1")
   })
 })
