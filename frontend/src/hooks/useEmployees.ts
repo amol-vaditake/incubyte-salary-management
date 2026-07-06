@@ -40,7 +40,15 @@ export function useEmployees(
     return () => {
       cancelled = true
     }
-  }, [filters.country, filters.department, filters.status, page, pageSize, refetchToken])
+  }, [
+    filters.country,
+    filters.department,
+    filters.status,
+    filters.search,
+    page,
+    pageSize,
+    refetchToken,
+  ])
 
   return { data, isLoading, error, refetch: () => setRefetchToken((t) => t + 1) }
 }

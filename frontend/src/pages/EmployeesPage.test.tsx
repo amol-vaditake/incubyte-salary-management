@@ -278,4 +278,23 @@ describe("EmployeesPage", () => {
     )
     expect(screen.getByTestId("location-search").textContent).toContain("page=1")
   })
+
+  it("typing in the search box triggers a fetch scoped to that search term and updates the URL", async () => {
+    const user = userEvent.setup()
+    const fetchMock = mockFetch({ listResponder: () => okJson(buildResponse()) })
+
+    renderWithRouter(<EmployeesPage />)
+    await screen.findByText("EMP-00001")
+
+    await user.type(screen.getByRole("textbox", { name: /search/i }), "priya")
+
+    await waitFor(
+      () => {
+        const lastUrl = listCalls(fetchMock).at(-1)![0] as string
+        expect(lastUrl).toContain("search=priya")
+      },
+      { timeout: 5000 }
+    )
+    expect(screen.getByTestId("location-search").textContent).toContain("search=priya")
+  })
 })

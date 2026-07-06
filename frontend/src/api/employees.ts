@@ -19,6 +19,7 @@ export function fetchEmployees(params: FetchEmployeesParams): Promise<PaginatedE
   if (params.country) query.set("country", params.country)
   if (params.department) query.set("department", params.department)
   if (params.status) query.set("status", params.status)
+  if (params.search) query.set("search", params.search)
 
   return apiGet<PaginatedEmployees>(`/employees?${query.toString()}`)
 }

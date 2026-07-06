@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import {
   Table,
@@ -7,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
 import {
   Pagination,
   PaginationContent,
@@ -56,6 +58,23 @@ export function EmployeesPage() {
     setSearchParams(next, { replace: true })
   }
 
+  const [searchInput, setSearchInput] = useState(filters.search ?? "")
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
+
+  function handleSearchChange(value: string) {
+    setSearchInput(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      updateFilter("search", value || null)
+    }, 300)
+  }
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-8">
       <div className="flex items-center justify-between">
@@ -64,6 +83,13 @@ export function EmployeesPage() {
       </div>
 
       <div className="flex flex-wrap gap-3">
+        <Input
+          aria-label="Search"
+          placeholder="Search by name or email"
+          value={searchInput}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="w-64"
+        />
         <FilterSelect
           label="Country"
           value={filters.country}
