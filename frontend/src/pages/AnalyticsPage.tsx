@@ -6,14 +6,19 @@ export function AnalyticsPage() {
   const { data, isLoading, error } = useAnalyticsSummary()
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-8 p-8">
-      <h1 className="text-2xl font-semibold">Analytics</h1>
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+        <p className="text-muted-foreground text-sm">
+          How the org pays people, broken down by department, country, and level.
+        </p>
+      </div>
 
       {isLoading && <p className="text-muted-foreground">Loading analytics...</p>}
       {error && <p className="text-destructive">Failed to load analytics: {error}</p>}
 
       {!isLoading && !error && data && (
-        <>
+        <div className="grid gap-6 sm:grid-cols-2">
           <SalaryByCurrencyTable
             title="Average Salary by Department"
             labelHeading="Department"
@@ -36,8 +41,8 @@ export function AnalyticsPage() {
             }))}
           />
 
-          <section className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Headcount by Department</h2>
+          <section className="flex flex-col gap-3 rounded-lg border bg-card p-5">
+            <h2 className="text-lg font-semibold tracking-tight">Headcount by Department</h2>
             <BarChart
               data={data.headcountByDepartment.map((row) => ({
                 label: row.department,
@@ -46,13 +51,13 @@ export function AnalyticsPage() {
             />
           </section>
 
-          <section className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold">Headcount by Level</h2>
+          <section className="flex flex-col gap-3 rounded-lg border bg-card p-5">
+            <h2 className="text-lg font-semibold tracking-tight">Headcount by Level</h2>
             <BarChart
               data={data.headcountByLevel.map((row) => ({ label: row.level, value: row.count }))}
             />
           </section>
-        </>
+        </div>
       )}
     </div>
   )

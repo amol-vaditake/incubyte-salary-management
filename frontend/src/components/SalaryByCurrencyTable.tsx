@@ -23,11 +23,11 @@ interface SalaryByCurrencyTableProps {
 
 export function SalaryByCurrencyTable({ title, labelHeading, rows }: SalaryByCurrencyTableProps) {
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="text-lg font-semibold">{title}</h2>
+    <section className="flex flex-col gap-3 rounded-lg border bg-card p-5">
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="hover:bg-transparent">
             <TableHead>{labelHeading}</TableHead>
             <TableHead>Currency</TableHead>
             <TableHead>Average Salary</TableHead>
@@ -37,10 +37,12 @@ export function SalaryByCurrencyTable({ title, labelHeading, rows }: SalaryByCur
         <TableBody>
           {rows.map((row) => (
             <TableRow key={`${row.label}-${row.currency}`}>
-              <TableCell>{row.label}</TableCell>
-              <TableCell>{row.currency}</TableCell>
-              <TableCell>{formatSalary(row.averageSalary, row.currency)}</TableCell>
-              <TableCell>{row.count}</TableCell>
+              <TableCell className="font-medium">{row.label}</TableCell>
+              <TableCell className="text-muted-foreground">{row.currency}</TableCell>
+              <TableCell className="font-medium">
+                {formatSalary(row.averageSalary, row.currency)}
+              </TableCell>
+              <TableCell className="text-muted-foreground">{row.count}</TableCell>
             </TableRow>
           ))}
         </TableBody>
