@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/pagination"
 import { FilterSelect, ALL_VALUE } from "@/components/FilterSelect"
 import { CreateEmployeeDialog } from "@/components/CreateEmployeeDialog"
+import { StatusBadge } from "@/components/StatusBadge"
 import { useEmployees } from "@/hooks/useEmployees"
 import { useEmployeeOptions } from "@/hooks/useEmployeeOptions"
 import { formatSalary } from "@/lib/format"
@@ -156,7 +157,9 @@ export function EmployeesPage() {
                   <TableCell>{employee.roleTitle}</TableCell>
                   <TableCell>{employee.level}</TableCell>
                   <TableCell>{formatSalary(employee.salaryAmount, employee.currency)}</TableCell>
-                  <TableCell>{employee.status}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={employee.status} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

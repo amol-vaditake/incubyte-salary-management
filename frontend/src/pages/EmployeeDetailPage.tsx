@@ -10,6 +10,7 @@ import {
 import { useEmployee } from "@/hooks/useEmployee"
 import { formatSalary } from "@/lib/format"
 import { UpdateSalaryDialog } from "@/components/UpdateSalaryDialog"
+import { StatusBadge } from "@/components/StatusBadge"
 
 export function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -66,7 +67,9 @@ export function EmployeeDetailPage() {
             </div>
             <div>
               <dt className="text-muted-foreground text-sm">Status</dt>
-              <dd>{data.status}</dd>
+              <dd>
+                <StatusBadge status={data.status} />
+              </dd>
             </div>
           </dl>
 
