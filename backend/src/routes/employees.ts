@@ -4,6 +4,7 @@ import {
   createEmployee,
   findEmployeeByEmail,
   findEmployeeById,
+  findEmployeeOptions,
   findEmployees,
   nextEmployeeCode,
   updateEmployeeSalary,
@@ -216,6 +217,17 @@ export function createEmployeesRouter(pool: Pool): Router {
 
       const result = await findEmployees(pool, filters, { page, pageSize });
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Must be registered before "/:id" - otherwise Express would match
+  // "options" against the :id param and reject it as a malformed UUID.
+  router.get("/options", async (_req, res, next) => {
+    try {
+      const options = await findEmployeeOptions(pool);
+      res.json(options);
     } catch (err) {
       next(err);
     }

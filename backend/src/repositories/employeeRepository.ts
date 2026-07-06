@@ -189,6 +189,33 @@ export async function updateEmployeeSalary(
   return mapRow(result.rows[0]!);
 }
 
+export interface EmployeeOptions {
+  countries: string[];
+  departments: string[];
+  levels: string[];
+}
+
+// Sourced live from the table rather than a maintained list, so the create
+// form and the filter dropdowns can never drift from what the database
+// actually contains (or from each other).
+export async function findEmployeeOptions(pool: Pool): Promise<EmployeeOptions> {
+  const [countries, departments, levels] = await Promise.all([
+    pool.query<{ country: string }>(
+      "SELECT DISTINCT country FROM employees ORDER BY country"
+    ),
+    pool.query<{ department: string }>(
+      "SELECT DISTINCT department FROM employees ORDER BY department"
+    ),
+    pool.query<{ level: string }>("SELECT DISTINCT level FROM employees ORDER BY level"),
+  ]);
+
+  return {
+    countries: countries.rows.map((row) => row.country),
+    departments: departments.rows.map((row) => row.department),
+    levels: levels.rows.map((row) => row.level),
+  };
+}
+
 export async function findEmployees(
   pool: Pool,
   filters: EmployeeFilters,
