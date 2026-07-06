@@ -8,6 +8,7 @@ export interface EmployeeFilters {
   country?: string | undefined;
   department?: string | undefined;
   status?: string | undefined;
+  search?: string | undefined;
 }
 
 export interface PaginationParams {
@@ -81,6 +82,11 @@ function buildWhereClause(filters: EmployeeFilters): {
   if (filters.status) {
     values.push(filters.status);
     conditions.push(`status = $${values.length}`);
+  }
+  if (filters.search) {
+    values.push(`%${filters.search}%`);
+    const i = values.length;
+    conditions.push(`(first_name ILIKE $${i} OR last_name ILIKE $${i} OR email ILIKE $${i})`);
   }
 
   return {

@@ -42,6 +42,46 @@ describe("GET /employees", () => {
     });
   });
 
+  it("search matches a substring of first or last name, case-insensitively", async () => {
+    await insertEmployee(pool, {
+      employeeCode: "EMP-00006",
+      firstName: "Priya",
+      lastName: "Nair",
+      email: "priya.nair@acme.example",
+      country: "India",
+      department: "Finance",
+      status: "active",
+    });
+    const app = createApp(pool);
+
+    const res = await request(app).get("/employees?search=riy");
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.map((e: { employeeCode: string }) => e.employeeCode)).toEqual([
+      "EMP-00006",
+    ]);
+  });
+
+  it("search matches a substring of email", async () => {
+    await insertEmployee(pool, {
+      employeeCode: "EMP-00006",
+      firstName: "Priya",
+      lastName: "Nair",
+      email: "priya.nair@acme.example",
+      country: "India",
+      department: "Finance",
+      status: "active",
+    });
+    const app = createApp(pool);
+
+    const res = await request(app).get("/employees?search=acme.example");
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.map((e: { employeeCode: string }) => e.employeeCode)).toEqual([
+      "EMP-00006",
+    ]);
+  });
+
   it("returns a paginated page of employees ordered by employee_code", async () => {
     const app = createApp(pool);
 

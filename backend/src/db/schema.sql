@@ -19,6 +19,13 @@ CREATE TABLE IF NOT EXISTS employees (
 CREATE INDEX IF NOT EXISTS idx_employees_country ON employees (country);
 CREATE INDEX IF NOT EXISTS idx_employees_department ON employees (department);
 CREATE INDEX IF NOT EXISTS idx_employees_status ON employees (status);
+-- pg_trgm/GIN would accelerate ILIKE '%substring%' searches better than
+-- btree, but pg-mem (our test engine) hard-crashes on CREATE EXTENSION
+-- pg_trgm ("Extension does not exist") rather than no-op-ing - and that
+-- crash would break schema application for every single test. Falling
+-- back to plain btree indexes per the explicitly-authorized fallback.
+CREATE INDEX IF NOT EXISTS idx_employees_first_name ON employees (first_name);
+CREATE INDEX IF NOT EXISTS idx_employees_last_name ON employees (last_name);
 
 CREATE TABLE IF NOT EXISTS salary_history (
   id UUID PRIMARY KEY,

@@ -213,6 +213,7 @@ export function createEmployeesRouter(pool: Pool): Router {
         country: parseStringFilter(req.query.country),
         department: parseStringFilter(req.query.department),
         status: parseStringFilter(req.query.status),
+        search: parseStringFilter(req.query.search),
       };
 
       const result = await findEmployees(pool, filters, { page, pageSize });
