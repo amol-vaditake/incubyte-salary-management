@@ -42,7 +42,7 @@ interface MockFetchConfig {
 // POST /employees on submit, so a simple ordered mockResolvedValueOnce
 // chain no longer reflects what actually happens.
 function mockFetch({ options = DEFAULT_OPTIONS, postResponse }: MockFetchConfig = {}) {
-  const fetchMock = vi.fn((url: string, init?: { method?: string }) => {
+  const fetchMock = vi.fn((_url: string, init?: { method?: string }) => {
     if (init?.method === "POST") {
       return Promise.resolve({
         ok: postResponse?.ok ?? true,
@@ -62,7 +62,7 @@ function mockFetch({ options = DEFAULT_OPTIONS, postResponse }: MockFetchConfig 
 
 function findPostCall(fetchMock: ReturnType<typeof vi.fn>) {
   return fetchMock.mock.calls.find(
-    ([, init]: [string, { method?: string }]) => init?.method === "POST"
+    (call) => (call[1] as { method?: string } | undefined)?.method === "POST"
   )!
 }
 

@@ -3,6 +3,13 @@ import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { CreateEmployeeDialog } from "./CreateEmployeeDialog"
 import type { EmployeeDetail } from "@/types/employee"
+import type { EmployeeOptions } from "@/types/options"
+
+const DEFAULT_OPTIONS: EmployeeOptions = {
+  countries: ["India", "USA", "UK", "Germany", "Canada"],
+  departments: ["Engineering", "Sales", "HR", "Finance", "Operations", "Marketing"],
+  levels: ["Junior", "Mid", "Senior", "Lead"],
+}
 
 function buildCreatedEmployee(): EmployeeDetail {
   return {
@@ -25,6 +32,27 @@ function buildCreatedEmployee(): EmployeeDetail {
   }
 }
 
+// URL/method-aware: CreateEmployeeForm now fetches GET /employees/options
+// on mount in addition to POST /employees on submit.
+function mockFetch(postResponse?: { ok: boolean; status: number; body: unknown }) {
+  const fetchMock = vi.fn((_url: string, init?: { method?: string }) => {
+    if (init?.method === "POST") {
+      return Promise.resolve({
+        ok: postResponse?.ok ?? true,
+        status: postResponse?.status ?? 201,
+        json: () => Promise.resolve(postResponse?.body ?? buildCreatedEmployee()),
+      })
+    }
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(DEFAULT_OPTIONS),
+    })
+  })
+  vi.stubGlobal("fetch", fetchMock)
+  return fetchMock
+}
+
 afterEach(() => {
   vi.unstubAllGlobals()
 })
@@ -32,6 +60,7 @@ afterEach(() => {
 describe("CreateEmployeeDialog", () => {
   it("opens the form when the trigger is clicked, and it isn't shown before that", async () => {
     const user = userEvent.setup()
+    mockFetch()
 
     render(<CreateEmployeeDialog onCreated={vi.fn()} />)
 
@@ -45,14 +74,7 @@ describe("CreateEmployeeDialog", () => {
   it("closes the dialog and calls onCreated after a successful submission", async () => {
     const user = userEvent.setup()
     const created = buildCreatedEmployee()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: () => Promise.resolve(created),
-      })
-    )
+    mockFetch({ ok: true, status: 201, body: created })
     const onCreated = vi.fn()
 
     render(<CreateEmployeeDialog onCreated={onCreated} />)

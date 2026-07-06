@@ -11,11 +11,9 @@ import {
 import { FormField } from "@/components/FormField"
 import { createEmployee } from "@/api/employees"
 import { ApiError } from "@/api/client"
+import { useEmployeeOptions } from "@/hooks/useEmployeeOptions"
 import type { CreateEmployeeInput, EmployeeDetail } from "@/types/employee"
 
-const COUNTRIES = ["India", "USA", "UK", "Germany", "Canada"]
-const DEPARTMENTS = ["Engineering", "Sales", "HR", "Finance", "Operations", "Marketing"]
-const LEVELS = ["Junior", "Mid", "Senior", "Lead"]
 const CURRENCIES = ["INR", "USD", "GBP", "EUR", "CAD"]
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -73,6 +71,7 @@ interface CreateEmployeeFormProps {
 }
 
 export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
+  const { options } = useEmployeeOptions()
   const [form, setForm] = useState<FormState>(initialState)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -152,7 +151,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               <SelectValue placeholder="Select country" />
             </SelectTrigger>
             <SelectContent>
-              {COUNTRIES.map((country) => (
+              {options.countries.map((country) => (
                 <SelectItem key={country} value={country}>
                   {country}
                 </SelectItem>
@@ -169,7 +168,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
-              {DEPARTMENTS.map((department) => (
+              {options.departments.map((department) => (
                 <SelectItem key={department} value={department}>
                   {department}
                 </SelectItem>
@@ -194,7 +193,7 @@ export function CreateEmployeeForm({ onSuccess }: CreateEmployeeFormProps) {
               <SelectValue placeholder="Select level" />
             </SelectTrigger>
             <SelectContent>
-              {LEVELS.map((level) => (
+              {options.levels.map((level) => (
                 <SelectItem key={level} value={level}>
                   {level}
                 </SelectItem>
